@@ -3,17 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=yes">
     <title>ペア抽選・シャッフル</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css">
     <style>
-        /* @charset "utf-8"; */
-        h1{
-            text-align: center;
-            font-weight: lighter;
-            border-bottom: 1px solid #000;
-        }
         #main{
             display: flex;
             justify-content: space-around;
@@ -31,7 +25,7 @@
             border-bottom: 1px solid rgba(37, 37, 37, 0.805);
             background-color: white;
         }
-        form{
+        #listmaker{
             text-align: center;
         }
         #list input[type="text"]{
@@ -49,7 +43,7 @@
         option[value="1"]{
             text-align: center;
         }
-        #list input[type="button"]{
+        input[type="button"]{
             border: 1px ridge black;
             padding: 3px;
             background-color: aliceblue;
@@ -102,7 +96,6 @@
         #reroll{
             width: 100px;
             border: 1px solid black;
-            /* display: none; */
         }
         #subsec{
             background-color: rgba(255, 92, 92, 0.255);
@@ -113,6 +106,7 @@
             margin: 10px auto;
             border-radius: 10px;
             display: none;
+            text-align: center;
         }
         #result2{
             background-color: #fff;
@@ -130,29 +124,57 @@
             width: 20%;
             border-bottom: 1px solid black;
         }
+        @media screen and (max-width: 959px) {
+            #main {
+                display: block;
+            }
+            #list{
+                max-height: 50%;
+                padding: 5px;
+                background-color: rgba(255, 92, 92, 0.255);
+                border-radius: 10px;
+            }
+            #subsec {
+                margin: 10px auto;
+            }
+        }
+        @media screen and (max-width: 480px) {
+            #main {
+                display: block;
+            }
+            #list{
+                max-height: 50%;
+                padding: 5px;
+                background-color: rgba(255, 92, 92, 0.255);
+                border-radius: 10px;
+            }
+            #subsec {
+                margin: 10px auto;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="main">
         <section id="list">
             <div id="listmaker">
-                <form action="#">
-                    <input type="text" id="inputname" placeholder="名前を入力してください"><br>
-                    <input type="button" id="addname" value="名前を追加">
-                    <input type="button" class="untouch" id="delname" value="名前を削除" disabled><br>
-                    <select id="choice" class="untouch" disabled>
-                        <option value="0">1人選出</option>
-                        <option value="1" selected>チーム抽選</option>
-                    </select>
-                    <input type="button" class="untouch" id="start" value="抽選開始" disabled>
-                </form>
+                <input type="text" id="inputname" placeholder="名前を入力してください"><br>
+                <input type="button" id="addname" value="名前を追加">
+                <input type="button" class="untouch" id="delname" value="名前を削除" disabled><br>
+                <select id="choice" class="untouch" disabled>
+                    <option value="0">1人選出</option>
+                    <option value="1" selected>チーム抽選</option>
+                </select>
+                <input type="button" class="untouch" id="start" value="抽選開始" disabled>
             </div>
             <div id="allmem"></div>
             <div id="result1"><span></span></div>
             <button id="reset" value="close"></button>
         </section>
         <section id="subsec">
-            <table id="result2"></tab>
+            <table id="result2"></table>
+            <input type="button" value="対面ボタン" id="ready">
+            <p id="vs"></p>
         </section>
     </div>
 </body>
@@ -162,9 +184,14 @@ $(function(){
     $("#addname").on("click",function(){
         let temphtml = "";
         if($("#inputname").val().length !== 0){
+
             set.add($("#inputname").val());
+            console.log(set.size);
+
             if(set.has($("#addname").val())){
+
                 console.log('入力してください');
+
             } else {
                 $("#allmem").html("");
                 for(let out of set){
@@ -187,6 +214,7 @@ $(function(){
         for (let a=0; a<checker.length; a++) {
             if (checker[a].checked) {
                 set.delete(checker[a].value);
+                console.log('現在' + set.size + '人');
             }
         }
         $("#allmem").html("");
@@ -208,11 +236,14 @@ function shaffle(){
     if(sec===15){
         clearInterval(start);
         $("#start").removeAttr("disabled");
-        $("#result1 span").before("選ばれたのは ")
+
+        $("#result1 span").before("当選したのは ")
         .append($("label").eq(s).text())
-        .after(" !");
+        .after(" です!");
+
         $("#result1").fadeIn("slow");
     } else{
+
         $("#allmem p").eq(s).css("background-color","");
         s = Math.floor(Math.random()*$(".cbox").length);
         $("#allmem p").eq(s).css("background-color","red");
@@ -223,10 +254,10 @@ let baseList = [];
 let newList = [];
 let a = 0;
 let b;
+let tempHtml = "";
 function startRound(){
     let ready = confirm("このメンバーで抽選を始めます。\r\n開始しますか？");
     if(ready){
-        // $("#result1").css("display","none");
         baseList = [];
         newList = [];
         for (let i=0; i<$(".cbox").length; i++) {
@@ -235,15 +266,18 @@ function startRound(){
         if(baseList.length % 2 == 1){
             baseList.push("NO ENTRY");
         }
+        console.log("baseList="+baseList);
         while (baseList.length) {
             const ran = Math.floor(Math.random()*baseList.length);
             newList.push(baseList[ran]);
             baseList.splice(ran,1);
         }
-        let tempHtml = "";
+        console.log("newList="+newList);
+        
+        tempHtml = "";
         a = 0;
         for(let i = 0;i < (newList.length / 2); i++){
-            tempHtml += "<tr><th>LINE " + team[i] + "</th>";
+            tempHtml += "<tr id='" + team[i] + "'><th>LINE " + team[i] + "</th>";
                 for(let j = 0; j < 2; j++){
                     tempHtml += "<td>";
                     tempHtml += newList[a];
@@ -252,15 +286,15 @@ function startRound(){
                 }
             tempHtml += "</tr>";
         }
-        $("#result2").html(tempHtml); //最後にまとめて追加
+        tempHtml += "<br>";
+        $("#result2").html(tempHtml);
         $("#subsec").fadeIn("fast");
     }
 }
-
-//各種動作開始(optionから選択式)
 $("#start").on("click",function(){
     if($("#choice").val()=="0"){
         sec = 0;
+        $("#result1").html("");
         $("#result1").html("<span></span>");
         startChange();
         $("#start").attr("disabled");
@@ -270,6 +304,10 @@ $("#start").on("click",function(){
         $("#start").attr("disabled");
         startRound();
     }
+});
+$("#ready").on("click", function(){
+    let x = newList.length;
+    $("#vs").html("<span>" +  + "</span>")
 });
 </script>
 </html>
